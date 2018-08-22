@@ -1,7 +1,7 @@
 # baseqDrops
 A versatile pipeline for processing dataset from 10X, indrop and Drop-seq.
 
-## Install baseq_drops
+## Install baseqDrops
 We need python3 and a package called: baseqDrops, which could be installed by:
 
     pip install baseqDrops
@@ -53,5 +53,5 @@ The main config is:
 
 If you config the: `cellranger_ref_hg38` you can run the following:
 
-    baseq-Drop run_pipe --config ./config_drops.ini -g hg38 -p 10X --minreads 10000 -n 10X_test -1 10x_1.1.fq.gz -2 10x.2.fq.gz -d ./
+    baseqDrops run_pipe --config ./config_drops.ini -g hg38 -p 10X --minreads 10000 -n 10X_test -1 10x_1.1.fq.gz -2 10x.2.fq.gz -d ./
 
