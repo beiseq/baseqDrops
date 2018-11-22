@@ -16,7 +16,7 @@ The following software or resources are required:
 
 + `star`: STAR software, for fast alignment of RNA-Seq data to the genome;
 + `samtools`: For sorting the aligned bam file (version >=1.6);
-+ `whitelistDir`: The barcode whitelist files for indrop and 10X should be placed under whitelistDir. These files could bed downloaded from https://github.com/beiseq/baseqDrops/tree/master/whilelist;
++ `whitelistDir`: The barcode whitelist files for indrop and 10X should be placed under whitelistDir. These files could bed downloaded from https://github.com/beiseq/baseqDrops/tree/master/whitelist;
 + `cellranger_ref_<genome>`: The key process of read alignment and tagging to genes are inspired and borrowed from the open source cellranger pipeline(https://github.com/10XGenomics/cellranger). The references of genome index and transcriptome can be downloaded from https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest.
 In the config file, the directory of cellranger references is named as `cellranger_<genome>`.
 
