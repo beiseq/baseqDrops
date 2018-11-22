@@ -1,0 +1,181 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>baseqdrops.barcode.stats &#8212; baseqDrops 0.01 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/customize.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for baseqdrops.barcode.stats</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">baseqdrops.barcode.whitelist</span> <span class="k">import</span> <span class="n">read_whitelist</span><span class="p">,</span> <span class="n">check_whitelist</span>
+
+<span class="k">def</span> <span class="nf">mutate_single_base</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="n">mutated</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">bases</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="n">base_raw</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">base</span> <span class="o">!=</span> <span class="n">base_raw</span><span class="p">:</span>
+                <span class="n">temp</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span>
+                <span class="n">mutated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">mutated</span>
+
+<div class="viewcode-block" id="valid_barcode"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.valid_barcode">[docs]</a><span class="k">def</span> <span class="nf">valid_barcode</span><span class="p">(</span><span class="n">protocol</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">barcode_count</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">max_cell</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">min_reads</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;bc.stats.txt&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Aggregate the mismatch barcode, get the total_reads;</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        #. Read the barcode counts files;</span>
+<span class="sd">        #. Correct the barcode with 1bp mismatch;</span>
+<span class="sd">        #. Stats the mismatch barcode reads and sequences;</span>
+<span class="sd">        #. Determine the last base of barcode is missed (mainly for drop-seq);</span>
+<span class="sd">        #. Filter the barcode whitelist;</span>
+<span class="sd">        #. Filter barcodes by read counts &gt;= min_reads (2000);</span>
+<span class="sd">        #. Filter barcodes by the max number of cells;</span>
+<span class="sd">        #. Print the number of barcode and reads retained after each steps.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    ::</span>
+<span class="sd">        from baseqdrops.barcode.stats import valid_barcode</span>
+<span class="sd">        valid_barcode(&quot;10X&quot;, &quot;bc.counts.txt&quot;,</span>
+<span class="sd">            max_cell=10000, min_reads=2000, output=&quot;bc.stats.txt&quot;)</span>
+
+<span class="sd">    This write a bc_stats.csv file (CSV) which contains:</span>
+<span class="sd">    ::</span>
+<span class="sd">        barcode/counts/mismatch_reads/mismatch_bc/mutate_last_base</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Stats the barcodes in </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">barcode_count</span><span class="p">))</span>
+
+    <span class="c1">#Read the whitelist</span>
+    <span class="n">bc_white</span> <span class="o">=</span> <span class="n">read_whitelist</span><span class="p">(</span><span class="n">protocol</span><span class="p">)</span> 
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">barcode_count</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;counts&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;mismatch_reads&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;mismatch_bc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;mutate_last_base&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;total_reads&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;whitelist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1">#Aggregate by 1 Mismatch</span>
+    <span class="k">for</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bc</span><span class="p">,</span> <span class="s1">&#39;counts&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">min_reads</span><span class="p">:</span>
+            <span class="k">continue</span>
+    
+        <span class="c1">#Find 1bp mismatches of barcode;</span>
+        <span class="c1">#The mismatch barcode should have less barcode counts;</span>
+        <span class="n">bc_mis</span> <span class="o">=</span> <span class="n">mutate_single_base</span><span class="p">(</span><span class="n">bc</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">bc_mis</span><span class="p">)</span>
+        <span class="n">index_fewerreads</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;counts&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">count</span>
+        <span class="n">df_mis</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">index</span> <span class="o">&amp;</span> <span class="n">index_fewerreads</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;counts&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">barcode_mis</span> <span class="o">=</span> <span class="n">df_mis</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="c1">#Determine for lost of last bases</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">barcode_mis</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">3</span> <span class="ow">and</span> <span class="nb">sum</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">barcode_mis</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">bc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bc</span><span class="p">,</span> <span class="s1">&#39;mutate_last_base&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bc</span><span class="p">,</span> <span class="s1">&#39;mismatch_reads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">df_mis</span><span class="p">[</span><span class="s1">&#39;counts&#39;</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bc</span><span class="p">,</span> <span class="s1">&#39;mismatch_bc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_mis</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bc</span><span class="p">,</span> <span class="s1">&#39;total_reads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">df_mis</span><span class="p">[</span><span class="s1">&#39;counts&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bc</span><span class="p">,</span> <span class="s1">&#39;counts&#39;</span><span class="p">]</span>
+        
+        <span class="c1">#set the counts to 0 after usage...</span>
+        <span class="c1">#df.loc[index, &#39;counts&#39;] = 0</span>
+
+    <span class="c1">#Filter by whitelist</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">check_whitelist</span><span class="p">(</span><span class="n">bc_white</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;whitelist&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valid</span>
+
+    <span class="n">df_white</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;whitelist&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1">#Filter by read counts</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Filtering the barcodes exceeds number </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">min_reads</span><span class="p">))</span>
+    <span class="n">df_white_reads</span> <span class="o">=</span> <span class="n">df_white</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_white</span><span class="p">[</span><span class="s1">&#39;total_reads&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">min_reads</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;total_reads&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1">#Filter by max number of cells</span>
+    <span class="k">if</span> <span class="n">df_white_reads</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">max_cell</span><span class="p">:</span>
+        <span class="n">df_white_reads</span> <span class="o">=</span> <span class="n">df_white_reads</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">max_cell</span><span class="p">,</span> <span class="p">]</span>
+
+    <span class="c1">#Print informations</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Raw CBs count </span><span class="si">{}</span><span class="s2"> ==&gt; Whitelist CBs </span><span class="si">{}</span><span class="s2"> ==&gt; Abundent CBs </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_white</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_white_reads</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Raw Reads </span><span class="si">{}</span><span class="s2"> ==&gt; Whitelist Reads </span><span class="si">{}</span><span class="s2"> ==&gt; Abundent Reads </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_reads&#39;</span><span class="p">]),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">df_white</span><span class="p">[</span><span class="s1">&#39;total_reads&#39;</span><span class="p">]),</span>
+                                                                                    <span class="nb">sum</span><span class="p">(</span><span class="n">df_white_reads</span><span class="p">[</span><span class="s1">&#39;total_reads&#39;</span><span class="p">])))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] The stats file write to: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+    <span class="n">df_white_reads</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright BEISEQ Information Technology.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

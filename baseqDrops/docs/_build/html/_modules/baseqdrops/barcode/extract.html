@@ -1,0 +1,159 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>baseqdrops.barcode.extract &#8212; baseqDrops 0.01 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/customize.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for baseqdrops.barcode.extract</h1><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">HammingDistance</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq1</span><span class="p">,</span> <span class="n">seq2</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+<div class="viewcode-block" id="extract_barcode"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.extract_barcode">[docs]</a><span class="k">def</span> <span class="nf">extract_barcode</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract cell barcode from reads 1 sequences, if protocol not defined, return blank.</span>
+<span class="sd">        - 10X: seq[0:16]</span>
+<span class="sd">        - indrop: seq[0:i] + seq[i + 22 : i + 22 + 8] (i is length of barcode 1)</span>
+<span class="sd">        - dropseq: seq[0:12]</span>
+
+<span class="sd">    Usages:</span>
+<span class="sd">    ::</span>
+<span class="sd">        from baseqdrops import extract_barcode</span>
+<span class="sd">        extract_barcode(&quot;10X&quot;, &quot;ATCGATCGATCGACTAAATTTTTTT&quot;)</span>
+
+<span class="sd">        #You can speficy the UMI and barcode length</span>
+<span class="sd">        extract_barcode(&quot;10X&quot;, &quot;ATCGATCGATCGACTAAATTTTTTT&quot;, 14, 5)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        barcode sequence, if no valid barcode, return &quot;&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;10X&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">protocol</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;10X_14_10&quot;</span><span class="p">,</span> <span class="s2">&quot;10X_14_5&quot;</span><span class="p">]:</span> 
+        <span class="k">return</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">14</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;dropseq&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">12</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;indrop&quot;</span><span class="p">:</span>
+        <span class="n">w1</span> <span class="o">=</span> <span class="s2">&quot;GAGTGATTGCTTGTGACGCCTT&quot;</span>
+        <span class="k">if</span> <span class="n">w1</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+            <span class="n">w1_pos</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">w1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="mi">7</span> <span class="o">&lt;</span> <span class="n">w1_pos</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">w1_pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">seq</span><span class="p">[</span><span class="n">w1_pos</span> <span class="o">+</span> <span class="mi">22</span><span class="p">:</span><span class="n">w1_pos</span> <span class="o">+</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">8</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">):</span>
+                <span class="n">w1_mutate</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">22</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">HammingDistance</span><span class="p">(</span><span class="n">w1_mutate</span><span class="p">,</span> <span class="n">w1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">seq</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">22</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">8</span><span class="p">]</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>   </div>
+
+<div class="viewcode-block" id="extract_UMI"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.extract_UMI">[docs]</a><span class="k">def</span> <span class="nf">extract_UMI</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">barcode</span><span class="p">,</span> <span class="n">seq1</span><span class="p">,</span> <span class="n">missing_base</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract UMI from reads 1 sequences. If the reads length too short, return blank.</span>
+<span class="sd">    ::</span>
+<span class="sd">        10X: 16-26</span>
+<span class="sd">        10X_14_10, 10X_14_5: 14:19/ 14:24</span>
+<span class="sd">        indrop: seq1[len(barcode) + 22:len(barcode) + 22 + 6]</span>
+<span class="sd">        dropseq: 11-19/12-20</span>
+<span class="sd">    Args:</span>
+<span class="sd">        barcode: Provide the barcode sequences;</span>
+<span class="sd">        seq1: The sequence of read1;</span>
+<span class="sd">    Usage:</span>
+<span class="sd">    ::</span>
+<span class="sd">        from baseqdrop import extract_UMI</span>
+<span class="sd">        extract_UMI(&quot;&quot;, &quot;&quot;, &quot;AA....TTT&quot;, False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">UMI</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">seq1</span> <span class="o">=</span> <span class="n">seq1</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;10X&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">26</span><span class="p">:</span>
+        <span class="n">UMI</span> <span class="o">=</span> <span class="n">seq1</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">26</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;10X_14_5&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">19</span><span class="p">:</span>
+        <span class="n">UMI</span> <span class="o">=</span> <span class="n">seq1</span><span class="p">[</span><span class="mi">14</span><span class="p">:</span><span class="mi">19</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;10X_14_10&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">24</span><span class="p">:</span>
+        <span class="n">UMI</span> <span class="o">=</span> <span class="n">seq1</span><span class="p">[</span><span class="mi">14</span><span class="p">:</span><span class="mi">24</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;dropseq&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">20</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">missing_base</span><span class="p">:</span>
+            <span class="n">UMI</span> <span class="o">=</span> <span class="n">seq1</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">19</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">UMI</span> <span class="o">=</span> <span class="n">seq1</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;indrop&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq1</span><span class="p">)</span><span class="o">&gt;=</span><span class="nb">len</span><span class="p">(</span><span class="n">barcode</span><span class="p">)</span> <span class="o">+</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="n">UMI</span> <span class="o">=</span> <span class="n">seq1</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">barcode</span><span class="p">)</span> <span class="o">+</span> <span class="mi">22</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">barcode</span><span class="p">)</span> <span class="o">+</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">6</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">UMI</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright BEISEQ Information Technology.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

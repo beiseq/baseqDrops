@@ -1,0 +1,249 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>baseqdrops.pipeline &#8212; baseqDrops 0.01 documentation</title>
+    <link rel="stylesheet" href="../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/customize.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for baseqdrops.pipeline</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+
+<div class="viewcode-block" id="pipeline"><a class="viewcode-back" href="../../函数介绍.html#baseqdrops.pipeline">[docs]</a><span class="k">def</span> <span class="nf">pipeline</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">genome</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">cells</span><span class="p">,</span> <span class="n">minreads</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">fq1</span><span class="p">,</span> <span class="n">fq2</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span>
+             <span class="n">top_million_reads</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">parallel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run the Data Processing Pipeline...</span>
+
+<span class="sd">    #. Stats and count the barcode from pair-end 1 sequences;</span>
+<span class="sd">    #. Read the barcode counts files;</span>
+<span class="sd">    #. Correct the barcode with 1bp mismatch;</span>
+<span class="sd">    #. Stats the mismatch barcode reads and sequences;</span>
+<span class="sd">    #. Determine wheather mutate on the last base (show A/T/C/G with similar ratio at the last base);</span>
+<span class="sd">    #. Filter by whitelist;</span>
+<span class="sd">    #. Filter by read counts (&gt;=min_reads);</span>
+<span class="sd">    #. Print the number of barcode and reads retained after each steps.</span>
+
+<span class="sd">    Usage:</span>
+<span class="sd">    ::</span>
+<span class="sd">        from baseqdrops import pipeline</span>
+<span class="sd">        pipeline(&quot;&quot;, &quot;hg38&quot;, &quot;10X&quot;, 1000, minreads, name, fq1, fq2, dir, top_million_reads, step, parallel)</span>
+<span class="sd">        </span>
+<span class="sd">        #specify the length of UMI and barcodes</span>
+<span class="sd">        pipeline(&quot;&quot;, &quot;hg38&quot;, &quot;10X&quot;, 1000, minreads, name, fq1, fq2, dir, top_million_reads, step, parallel)</span>
+<span class="sd">        </span>
+<span class="sd">        #Run in command line</span>
+<span class="sd">        baseqdrops  </span>
+
+<span class="sd">    Protocols:</span>
+
+<span class="sd">    #. For 10X: 16bp Barcode and 10 bp UMI =&gt; 10X (most commonly used)</span>
+<span class="sd">    #. For 10X: 14bp Barcode and 5/10 bp UMIs =&gt; 10X_14_10 / 10X_14_5 (For some old version data) </span>
+<span class="sd">    #. For DropSeq ==&gt; dropseq</span>
+<span class="sd">    #. For inDrop ==&gt; indrop</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: The path of configuration file;</span>
+<span class="sd">        genome: Genome version (hg38, mm10, hg38_mm10);</span>
+<span class="sd">        cells: Max number of cells;</span>
+<span class="sd">        minreads: Minimum number of reads for a cell barcode (10000);</span>
+<span class="sd">        name: Samplename;</span>
+<span class="sd">        fq1, fq2: Path to fastq reads;</span>
+<span class="sd">        dir: The folder for processing, a folder with samplename will be created;</span>
+<span class="sd">        top_million_reads: Number of reads used for processing in Million;</span>
+<span class="sd">        step: Steps to run;</span>
+<span class="sd">        parallel: How many thread to use;</span>
+
+<span class="sd">    Steps:</span>
+<span class="sd">        count</span>
+<span class="sd">        stats</span>
+<span class="sd">        split</span>
+<span class="sd">        star</span>
+<span class="sd">        tagging</span>
+<span class="sd">        table</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Start Processing Data ...&#39;</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">baseqdrops</span> <span class="k">import</span> <span class="n">count_barcode</span>
+    <span class="kn">from</span> <span class="nn">baseqdrops</span> <span class="k">import</span> <span class="n">valid_barcode</span>
+    <span class="kn">from</span> <span class="nn">baseqdrops</span> <span class="k">import</span> <span class="n">split_by_barcode</span>
+    <span class="kn">from</span> <span class="nn">baseqdrops.barcode.split_fast</span> <span class="k">import</span> <span class="n">split_by_barcode_faster</span>
+
+    <span class="nb">dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+    <span class="n">bc_counts</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;barcode_count_</span><span class="si">{}</span><span class="s2">.csv&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+    <span class="n">bc_stats</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;barcode_stats_</span><span class="si">{}</span><span class="s2">.csv&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+    <span class="n">bc_splits_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;barcode_splits&quot;</span><span class="p">)</span>
+    <span class="n">align_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;star_align&quot;</span><span class="p">)</span>
+    <span class="n">tagging_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;read_tagging&quot;</span><span class="p">)</span>
+    <span class="n">tpm_table</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;Result.UMIs.</span><span class="si">{}</span><span class="s2">.txt&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+    <span class="n">reads_table</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;Result.Reads.</span><span class="si">{}</span><span class="s2">.txt&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+    <span class="n">barcode_prefix</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="s1">&#39;ATCG&#39;</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">))]</span>
+
+    <span class="n">dirs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dir</span><span class="p">,</span> <span class="n">align_dir</span><span class="p">,</span> <span class="n">tagging_dir</span><span class="p">,</span> <span class="n">bc_splits_dir</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="n">dirs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;[error] Config file not exists&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;BASEQCFG&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span>
+
+    <span class="c1">#Check the existance of the files</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fq1</span><span class="p">):</span>
+         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;[error] Fastq1 does not exists&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fq2</span><span class="p">):</span>
+         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;[error] Fastq2 does not exists&quot;</span><span class="p">)</span>
+
+    <span class="c1">#count barcode</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Counting the barcodes ...&quot;</span><span class="p">)</span>
+        <span class="n">count_barcode</span><span class="p">(</span><span class="n">fq1</span><span class="p">,</span> <span class="n">bc_counts</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">min_reads</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">topreads</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">top_million_reads</span><span class="p">))</span>
+
+    <span class="c1">#aggregate</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;stats&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Aggregating the barcodes errors and get valid ones ...&quot;</span><span class="p">)</span>
+        <span class="n">valid_barcode</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">bc_counts</span><span class="p">,</span> <span class="n">max_cell</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span> <span class="n">min_reads</span><span class="o">=</span><span class="n">minreads</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">bc_stats</span><span class="p">)</span>
+
+    <span class="c1">#barcode split</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Split the barcode for each Barcode Prefix ...&quot;</span><span class="p">)</span>
+        <span class="n">split_by_barcode_faster</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">bc_stats</span><span class="p">,</span> <span class="n">fq1</span><span class="p">,</span> <span class="n">fq2</span><span class="p">,</span> <span class="n">bc_splits_dir</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">top_million_reads</span><span class="p">))</span>
+
+    <span class="c1">#run alignment</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;star&quot;</span><span class="p">]:</span>
+        <span class="kn">from</span> <span class="nn">baseqdrops.star</span> <span class="k">import</span> <span class="n">star_align</span>
+        <span class="n">star_align</span><span class="p">(</span><span class="n">bc_splits_dir</span><span class="p">,</span> <span class="n">align_dir</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">genome</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">parallel</span><span class="p">))</span>
+
+    <span class="c1">#run reads tagging</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;tagging&quot;</span><span class="p">]:</span>
+        <span class="kn">from</span> <span class="nn">baseqdrops.tagging.prime3</span> <span class="k">import</span> <span class="n">tagging_reads</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[info] Tagging the reads to genes...&#39;</span><span class="p">)</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">parallel</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">barcode_prefix</span><span class="p">:</span>
+            <span class="n">bamfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">align_dir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">.sort.bam&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bc</span><span class="p">,</span> <span class="n">bc</span><span class="p">))</span>
+            <span class="n">outfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tagging_dir</span><span class="p">,</span> <span class="s2">&quot;tagging.</span><span class="si">{}</span><span class="s2">.txt&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bc</span><span class="p">))</span>
+            <span class="n">pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">tagging_reads</span><span class="p">,</span> <span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="n">bamfile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,))</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="c1">#run Table aggragation</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;table&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[info] Tagging the reads to genes...&#39;</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">baseqdrops.aggregate</span> <span class="k">import</span> <span class="n">read_barcode_gene_file</span><span class="p">,</span> <span class="n">write_to_table</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">parallel</span><span class="p">))</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">barcode_prefix</span><span class="p">:</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tagging_dir</span><span class="p">,</span> <span class="s2">&quot;tagging.</span><span class="si">{}</span><span class="s2">.txt&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bc</span><span class="p">))</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">read_barcode_gene_file</span><span class="p">,</span> <span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+        <span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
+        <span class="n">barcodes_all</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
+        <span class="n">barcodes_lists</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">barcodes_all</span><span class="p">))</span>
+        
+        <span class="n">exp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">UMIs_all</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">UMI</span> <span class="ow">in</span> <span class="n">UMIs_all</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">UMI</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">:</span>
+                    <span class="n">exp</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">UMI</span><span class="p">[</span><span class="n">gene</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exp</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="n">UMI</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+        <span class="n">write_to_table</span><span class="p">(</span><span class="n">barcodes_lists</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">tpm_table</span><span class="p">)</span>  
+        
+        <span class="n">exp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">Reads_all</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span> 
+        <span class="k">for</span> <span class="n">UMI</span> <span class="ow">in</span> <span class="n">Reads_all</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">UMI</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">:</span>
+                    <span class="n">exp</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">UMI</span><span class="p">[</span><span class="n">gene</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exp</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="n">UMI</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+        <span class="n">write_to_table</span><span class="p">(</span><span class="n">barcodes_lists</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">reads_table</span><span class="p">)</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;begin running pipeline&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright BEISEQ Information Technology.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

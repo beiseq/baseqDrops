@@ -1,0 +1,13 @@
+.. currentmodule:: baseqDrops
+
+APIs
+===============
+
+.. autosummary::
+    :toctree: .
+
+        barcode.split.split_by_barcode
+
+.. currentmodule:: baseqDrops
+
+.. autofunction:: baseqDrops.barcode.split.split_by_barcode

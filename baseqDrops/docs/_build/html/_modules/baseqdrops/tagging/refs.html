@@ -1,0 +1,180 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>baseqdrops.tagging.refs &#8212; baseqDrops 0.01 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/customize.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for baseqdrops.tagging.refs</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">bisect</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="reference"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.reference">[docs]</a><span class="k">class</span> <span class="nc">reference</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    About the references of cellranger for counting the 10X data.</span>
+<span class="sd">    ::</span>
+<span class="sd">        from baseq.drops import reference</span>
+<span class="sd">        refs = reference(&quot;XXXX&quot;)</span>
+
+<span class="sd">    Todo:</span>
+<span class="sd">        目前函数抽离的工作还没有work。</span>
+<span class="sd">        类还无法使用。</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">star_index_dir</span><span class="p">,</span> <span class="n">cellranger_refs</span><span class="p">):</span>
+        <span class="c1">#read star index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_index</span><span class="p">()</span>
+
+<div class="viewcode-block" id="reference.read_index"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.reference.read_index">[docs]</a>    <span class="k">def</span> <span class="nf">read_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cellranger_refs</span><span class="p">,</span> <span class="n">star_index_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read the cellranger and star index files. It has the following properities:</span>
+<span class="sd">        ::</span>
+<span class="sd">            chrom_names: []</span>
+<span class="sd">            chrom_starts: [tx_ids&#39;, &#39;tx_starts&#39;, &#39;tx_ends&#39;, &#39;tx_max_ends&#39;, &#39;tx_strands&#39;, &#39;tx_num_exons&#39;, &#39;tx_break_idxs&#39;]</span>
+<span class="sd">            tx_info: []</span>
+<span class="sd">            ex_info: [&#39;ex_starts&#39;, &#39;ex_ends&#39;, &#39;ex_cum_lengths&#39;]</span>
+<span class="sd">            ex_tx: [&#39;gene&#39;, &#39;tx&#39;, &#39;genename&#39;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chrom_name_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">star_index_dir</span><span class="p">,</span> <span class="s2">&quot;chrName.txt&quot;</span><span class="p">)</span>
+        <span class="n">chrom_start_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">star_index_dir</span><span class="p">,</span> <span class="s2">&quot;chrStart.txt&quot;</span><span class="p">)</span>
+        <span class="n">tx_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">star_index_dir</span><span class="p">,</span> <span class="s2">&quot;transcriptInfo.tab&quot;</span><span class="p">)</span>
+        <span class="n">ex_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">star_index_dir</span><span class="p">,</span> <span class="s2">&quot;exonInfo.tab&quot;</span><span class="p">)</span>
+
+        <span class="n">gene_transc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cellranger_refs</span><span class="p">,</span> <span class="s2">&quot;genes_transcript.txt&quot;</span><span class="p">)</span>
+
+        <span class="n">tx_dtype</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;tx_ids&#39;</span><span class="p">,</span> <span class="s1">&#39;tx_starts&#39;</span><span class="p">,</span> <span class="s1">&#39;tx_ends&#39;</span><span class="p">,</span> <span class="s1">&#39;tx_max_ends&#39;</span><span class="p">,</span> <span class="s1">&#39;tx_strands&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;tx_num_exons&#39;</span><span class="p">,</span> <span class="s1">&#39;tx_break_idxs&#39;</span><span class="p">),</span>
+                    <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">,</span> <span class="s1">&#39;u8&#39;</span><span class="p">,</span> <span class="s1">&#39;u8&#39;</span><span class="p">,</span> <span class="s1">&#39;u8&#39;</span><span class="p">,</span> <span class="s1">&#39;u1&#39;</span><span class="p">,</span> <span class="s1">&#39;u2&#39;</span><span class="p">,</span> <span class="s1">&#39;u4&#39;</span><span class="p">)}</span>
+        <span class="n">ex_dtype</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;ex_starts&#39;</span><span class="p">,</span> <span class="s1">&#39;ex_ends&#39;</span><span class="p">,</span> <span class="s1">&#39;ex_cum_lengths&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;u8&#39;</span><span class="p">,</span> <span class="s1">&#39;u8&#39;</span><span class="p">,</span> <span class="s1">&#39;u8&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">gene_tx_dtype</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;gene&#39;</span><span class="p">,</span> <span class="s1">&#39;tx&#39;</span><span class="p">,</span> <span class="s1">&#39;genename&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">,</span> <span class="s1">&#39;object&#39;</span><span class="p">,</span> <span class="s1">&#39;object&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chrom_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">chrom_name_path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chrom_starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">chrom_start_path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;u8&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tx_info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">tx_path</span><span class="p">,</span> <span class="n">tx_dtype</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">unpack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ex_info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">ex_path</span><span class="p">,</span> <span class="n">ex_dtype</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">unpack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ex_tx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">gene_transc</span><span class="p">,</span> <span class="n">gene_tx_dtype</span><span class="p">,</span> <span class="n">unpack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">tx_starts</span> <span class="o">=</span> <span class="n">tx_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">chrom_bins</span> <span class="o">=</span> <span class="p">[</span><span class="n">bisect</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">tx_starts</span><span class="p">,</span> <span class="n">cs</span><span class="p">)</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">chrom_starts</span><span class="p">]</span>
+        <span class="n">chrom_info</span> <span class="o">=</span> <span class="n">chrom_names</span><span class="p">,</span> <span class="n">chrom_starts</span><span class="p">,</span> <span class="n">chrom_bins</span>
+
+        <span class="n">ex_starts</span><span class="p">,</span> <span class="n">ex_ends</span><span class="p">,</span> <span class="n">ex_cum_lengths</span> <span class="o">=</span> <span class="n">ex_info</span>
+        <span class="n">ex_breaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ex_starts</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ex_starts</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">ex_breaks</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ex_starts</span>
+        <span class="n">ex_breaks</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ex_ends</span></div>
+
+<div class="viewcode-block" id="reference.align_to_transcriptome"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.reference.align_to_transcriptome">[docs]</a>    <span class="k">def</span> <span class="nf">align_to_transcriptome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chrID</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">alength</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the overlap transcription names.</span>
+<span class="sd">        ::</span>
+<span class="sd">            refs.get_overlap_transc(&quot;chr1&quot;, start, end)</span>
+<span class="sd">            &gt; [&#39;ENST....&#39;, &#39;ENST...&#39;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ref_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chrom_starts</span><span class="p">[</span><span class="n">chrID</span><span class="p">]</span>
+        <span class="n">clipped_read_start</span> <span class="o">=</span> <span class="n">ref_offset</span> <span class="o">+</span> <span class="n">start</span>
+        <span class="n">clipped_read_end</span> <span class="o">=</span> <span class="n">clipped_read_start</span> <span class="o">+</span> <span class="n">alength</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">tx</span> <span class="o">=</span> <span class="n">bisect</span><span class="o">.</span><span class="n">bisect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript_starts</span><span class="p">,</span> <span class="n">clipped_read_end</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c1"># read is at the extreme start / end of transcriptome</span>
+        <span class="k">if</span> <span class="n">tx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">tx</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript_starts</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="n">tx_hits</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">while</span> <span class="n">tx</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">clipped_read_start</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">(</span><span class="n">transcript_max_ends</span><span class="p">[</span><span class="n">tx</span><span class="p">],</span> <span class="n">transcript_ends</span><span class="p">[</span><span class="n">tx</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">clipped_read_start</span> <span class="o">&lt;=</span> <span class="n">transcript_ends</span><span class="p">[</span><span class="n">tx</span><span class="p">]:</span>
+                <span class="n">tx_hits</span><span class="p">[</span><span class="n">transcript_ids</span><span class="p">[</span><span class="n">tx</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="n">clipped_read_start</span><span class="o">-</span><span class="n">transcript_starts</span><span class="p">[</span><span class="n">tx</span><span class="p">],</span>
+                    <span class="s1">&#39;exons&#39;</span><span class="p">:</span> <span class="n">transcript_num_exons</span><span class="p">[</span><span class="n">tx</span><span class="p">],</span>
+                    <span class="s1">&#39;exonIdx&#39;</span><span class="p">:</span> <span class="n">transcript_exon_break_idx</span><span class="p">[</span><span class="n">tx</span><span class="p">],</span>
+                    <span class="s1">&#39;gene&#39;</span><span class="p">:</span> <span class="n">tx2gene</span><span class="p">[</span><span class="n">transcript_ids</span><span class="p">[</span><span class="n">tx</span><span class="p">]],</span>
+                    <span class="s1">&#39;strand&#39;</span><span class="p">:</span> <span class="n">transcript_strands</span><span class="p">[</span><span class="n">tx</span><span class="p">]</span>
+                <span class="p">}</span>
+            <span class="n">tx</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">tx_hits</span></div>
+
+<div class="viewcode-block" id="reference.overlap_exons"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.reference.overlap_exons">[docs]</a>    <span class="k">def</span> <span class="nf">overlap_exons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">chr</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the overlap exons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright BEISEQ Information Technology.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

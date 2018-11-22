@@ -1,0 +1,186 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>baseqDrops &#8212; baseqDrops 0.01 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/customize.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">baseqDrops 0.01 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="baseqdrops">
+<h1>baseqDrops<a class="headerlink" href="#baseqdrops" title="Permalink to this headline">¶</a></h1>
+<p>baseqDrops enables fast analysis of 10X, inDrop and DropSeq datasets. The process includes barcode detection, error correction, aggregation and spliting. The raw sequencing datas are splitted into 16 files according to their barcode prefix (first two bases).</p>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<p>The package is host at Pypi and can be installed using pip command as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">baseqDrops</span>
+</pre></div>
+</div>
+<p>After installation, an executable command named as baseqDrops can be used for conducting analysis.</p>
+</div>
+<div class="section" id="config-file">
+<h2>Config file<a class="headerlink" href="#config-file" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline are relied on some softwares and resources. The paths should be record in an file (named as config.drops.ini, for example). The following items shoule be provided.</p>
+<ul class="simple">
+<li>star: <a class="reference external" href="https://github.com/alexdobin/STAR">STAR</a>, for fast alignment of RNA-Seq data;</li>
+<li><a class="reference external" href="https://github.com/samtools/samtools/releases/">samtools</a>: For manipulating bam files (recommand version 1.2);</li>
+<li>whitelistDir: The barcode whitelist files for indrop and 10X should be placed under whitelistDir. These files could bed downloaded from <a class="reference external" href="https://github.com/basedata10/DropRNA/tree/master/whitelist">whitelist</a>;</li>
+<li>cellranger_ref: The key process of read alignment and tagging to genes are inspired and borrowed from the open source cellranger pipeline(<a class="reference external" href="https://github.com/10XGenomics/cellranger">https://github.com/10XGenomics/cellranger</a>). The refernces of genome index and transcriptome can be downloaded from <a class="reference external" href="https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest">https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest</a>. In the config file, the directory of cellrange references is named as cellranger_&lt;genome&gt;.</li>
+</ul>
+<p>Here is an example of config file (config.ini):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Drops</span><span class="p">]</span>
+<span class="n">samtools</span> <span class="o">=</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">samtools</span>
+<span class="n">star</span> <span class="o">=</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">STAR</span>
+<span class="n">whitelistDir</span> <span class="o">=</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">whitelist_file_directory</span>
+<span class="n">cellranger_ref_hg38</span> <span class="o">=</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">reference</span><span class="o">/</span><span class="n">refdata</span><span class="o">-</span><span class="n">cellranger</span><span class="o">-</span><span class="n">GRCh38</span><span class="o">-</span><span class="mf">1.2</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-pipeline">
+<h2>Run pipeline<a class="headerlink" href="#run-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Here is a standard command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">baseqDrops</span> <span class="n">run_pipe</span> <span class="o">--</span><span class="n">config</span> <span class="o">./</span><span class="n">config</span><span class="o">.</span><span class="n">ini</span> <span class="o">-</span><span class="n">g</span> <span class="n">hg38</span> <span class="o">-</span><span class="n">p</span> <span class="mi">10</span><span class="n">X</span> \
+    <span class="o">--</span><span class="n">minreads</span> <span class="mi">10000</span> <span class="o">-</span><span class="n">n</span> <span class="mi">10</span><span class="n">X_sample</span> \
+    <span class="o">-</span><span class="mi">1</span> <span class="mi">10</span><span class="n">X_sample</span><span class="o">.</span><span class="mf">1.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+    <span class="o">-</span><span class="mi">2</span> <span class="mi">10</span><span class="n">X_sample</span><span class="o">.</span><span class="mf">2.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+    <span class="o">-</span><span class="n">d</span> <span class="o">./</span>
+</pre></div>
+</div>
+<p>Some key parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">g</span><span class="p">:</span> <span class="n">genome</span> <span class="n">version</span><span class="p">,</span> <span class="n">could</span> <span class="n">be</span> <span class="n">hg38</span><span class="o">/</span><span class="n">mm38</span><span class="o">/</span><span class="n">hg_mm</span><span class="p">,</span> <span class="n">the</span> <span class="n">corresponding</span> <span class="n">cellranger_ref</span> <span class="n">should</span> <span class="n">be</span> <span class="n">provided</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">config</span> <span class="n">file</span><span class="p">;</span>
+<span class="o">--</span><span class="n">config</span><span class="p">:</span> <span class="n">config</span> <span class="n">file</span><span class="p">;</span>
+<span class="o">--</span><span class="n">genome</span><span class="o">/-</span><span class="n">g</span><span class="p">:</span> <span class="n">genome</span> <span class="n">version</span><span class="p">;</span>
+<span class="o">--</span><span class="n">protocol</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="n">X</span><span class="o">|</span><span class="n">indrop</span><span class="o">|</span><span class="n">dropseq</span><span class="o">|</span><span class="mi">10</span><span class="n">X_14_5</span><span class="p">]</span>
+<span class="o">--</span><span class="n">minreads</span><span class="p">:</span> <span class="n">Minimum</span> <span class="n">reads</span> <span class="k">for</span> <span class="n">a</span> <span class="n">barcode</span>
+<span class="o">--</span><span class="n">name</span><span class="o">/-</span><span class="n">n</span> <span class="p">:</span> <span class="n">Sample</span> <span class="n">name</span>
+<span class="o">--</span><span class="n">fq1</span><span class="o">/-</span><span class="mi">1</span><span class="p">:</span> <span class="n">Read</span> <span class="mi">1</span>
+<span class="o">--</span><span class="n">fq2</span><span class="o">/-</span><span class="mi">2</span><span class="p">:</span> <span class="n">Read</span> <span class="mi">2</span>
+<span class="o">--</span><span class="n">top_million_reads</span><span class="p">:</span> <span class="n">How</span> <span class="n">many</span> <span class="n">million</span> <span class="n">reads</span> <span class="n">to</span> <span class="n">use</span><span class="p">,</span> <span class="n">mainly</span> <span class="k">for</span> <span class="n">testing</span> <span class="n">pipeline</span> <span class="k">with</span> <span class="n">fraction</span> <span class="n">of</span> <span class="n">reads</span>
+<span class="o">--</span><span class="nb">dir</span><span class="o">/-</span><span class="n">d</span><span class="p">:</span> <span class="n">output</span> <span class="n">path</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="protocols-supported">
+<h2>Protocols supported<a class="headerlink" href="#protocols-supported" title="Permalink to this headline">¶</a></h2>
+<p>We support the following .</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>10X</td>
+<td>10X</td>
+</tr>
+<tr class="row-odd"><td>10X_14_5</td>
+<td>10X older version, 14bp UMI and 5 bp UMI</td>
+</tr>
+<tr class="row-even"><td>10X_14_10</td>
+<td>10X older version, 14bp UMI and 10 bp UMI</td>
+</tr>
+<tr class="row-odd"><td>indrop</td>
+<td>indrop</td>
+</tr>
+<tr class="row-even"><td>Drop-Seq</td>
+<td>dropseq</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p><strong>Downsampling Reads</strong> Get the simuated UMIs and Reads matrix on lower sequencing depth from 10%-90% of the total reads.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">baseqDrops</span> <span class="n">run_sampling</span> <span class="o">-</span><span class="n">d</span> <span class="o">./</span> <span class="o">-</span><span class="n">n</span> <span class="n">indrop2</span> <span class="o">-</span><span class="n">t</span> <span class="mi">8</span> <span class="o">&amp;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="apis">
+<h2>APIs<a class="headerlink" href="#apis" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="#">Table Of Contents</a></h3>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">baseqDrops 0.01 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright BEISEQ Information Technology.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,543 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>DropsRNA &#8212; baseqDrops 0.01 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/customize.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="baseqDrops: A BEISEQ sofeware." href="index.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="baseqDrops: A BEISEQ sofeware."
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">baseqDrops 0.01 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dropsrna">
+<h1>DropsRNA<a class="headerlink" href="#dropsrna" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="design">
+<h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
+<p>The key question for Drops Pipeline design.</p>
+<ul class="simple">
+<li>Split the barcode;</li>
+<li>Tagging reads from genome position;</li>
+</ul>
+<img src="_images/graphviz-c2d3bf15989ba1fb02bc0576830e684e474306ff.png" alt="digraph Drops {
+    rankdir=LR;
+    node [shape=box, style=filled, fillcolor=&quot;#C0D0C0&quot;];
+    subgraph clusterClient {
+       label=&quot;Barcode Stats&quot;;
+       style=filled;
+       bgcolor=&quot;#D0C0A0&quot;;
+       &quot;Count&quot; -&gt; &quot;Valify&quot; -&gt; &quot;Splited&quot;;
+    };
+  subgraph clusterServer {
+     label=&quot;Quantify&quot;;
+     style=filled;
+     bgcolor=&quot;#D0C0A0&quot;;
+     &quot;STAR&quot; -&gt; &quot;Tagging&quot; -&gt; &quot;Aggregation&quot;;
+    };
+    &quot;Splited&quot; -&gt; &quot;STAR&quot;;
+
+ }" />
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<p><strong>Classes</strong></p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#baseqdrops.reference" title="baseqdrops.reference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reference</span></code></a>(star_index_dir,&nbsp;cellranger_refs)</td>
+<td>About the references of cellranger for counting the 10X data.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pipelines22</strong></p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#baseqdrops.pipeline" title="baseqdrops.pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pipeline</span></code></a>(config,&nbsp;genome,&nbsp;protocol,&nbsp;cells,&nbsp;…)</td>
+<td>Run the Data Processing Pipeline…</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Barcode Processing</strong></p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#baseqdrops.extract_barcode" title="baseqdrops.extract_barcode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_barcode</span></code></a>(protocol,&nbsp;seq)</td>
+<td>Extract cell barcode from reads 1 sequences, if protocol not defined, return blank.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#baseqdrops.extract_UMI" title="baseqdrops.extract_UMI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_UMI</span></code></a>(protocol,&nbsp;barcode,&nbsp;seq1[,&nbsp;…])</td>
+<td>Extract UMI from reads 1 sequences.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#baseqdrops.count_barcode" title="baseqdrops.count_barcode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_barcode</span></code></a>(path,&nbsp;output,&nbsp;protocol[,&nbsp;…])</td>
+<td>Count the number of the barcodes (), write a count file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#baseqdrops.valid_barcode" title="baseqdrops.valid_barcode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">valid_barcode</span></code></a>([protocol,&nbsp;barcode_count,&nbsp;…])</td>
+<td>Aggregate the mismatch barcode, get the total_reads;</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#baseqdrops.check_whitelist" title="baseqdrops.check_whitelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_whitelist</span></code></a>(bc_white,&nbsp;protocol,&nbsp;barcode)</td>
+<td>Check whitelist.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#baseqdrops.split_by_barcode" title="baseqdrops.split_by_barcode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_barcode</span></code></a>(name,&nbsp;protocol,&nbsp;bcstats,&nbsp;…)</td>
+<td>Split raw read2 file into 16 files according to the valid barcode in the bcstats files.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_barcode_faster</span></code>(name,&nbsp;protocol,&nbsp;…)</td>
+<td>Split the read2 files for each barcode prefix.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Alignments</strong></p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#baseqdrops.star_align" title="baseqdrops.star_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">star_align</span></code></a>(bc_dir,&nbsp;workdir,&nbsp;sample,&nbsp;genome,&nbsp;…)</td>
+<td>Run Star Alignments in parallel.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#baseqdrops.tagging_reads" title="baseqdrops.tagging_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tagging_reads</span></code></a>(genome,&nbsp;bam,&nbsp;outpath)</td>
+<td><strong>tagging_reads</strong> will read the bam file which sorted by header or barcode, report the UMIs and reads counts for each expressed genes of a barcode.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Stats</strong></p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#baseqdrops.stats_table" title="baseqdrops.stats_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stats_table</span></code></a>(counts,&nbsp;umis)</td>
+<td>Stats on the table of UMIs ::     from baseq.drops import stats_table     stats_table(“counts.txt”, “UMIs.txt”)</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="module-baseqdrops">
+<span id="apis"></span><h3>APIs<a class="headerlink" href="#module-baseqdrops" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="baseqdrops.extract_barcode">
+<code class="descclassname">baseqdrops.</code><code class="descname">extract_barcode</code><span class="sig-paren">(</span><em>protocol</em>, <em>seq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/barcode/extract.html#extract_barcode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.extract_barcode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Extract cell barcode from reads 1 sequences, if protocol not defined, return blank.</dt>
+<dd><ul class="first last simple">
+<li>10X: seq[0:16]</li>
+<li>indrop: seq[0:i] + seq[i + 22 : i + 22 + 8] (i is length of barcode 1)</li>
+<li>dropseq: seq[0:12]</li>
+</ul>
+</dd>
+</dl>
+<p>Usages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseqdrops</span> <span class="k">import</span> <span class="n">extract_barcode</span>
+<span class="n">extract_barcode</span><span class="p">(</span><span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="s2">&quot;ATCGATCGATCGACTAAATTTTTTT&quot;</span><span class="p">)</span>
+
+<span class="c1">#You can speficy the UMI and barcode length</span>
+<span class="n">extract_barcode</span><span class="p">(</span><span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="s2">&quot;ATCGATCGATCGACTAAATTTTTTT&quot;</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">barcode sequence, if no valid barcode, return “”</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.extract_UMI">
+<code class="descclassname">baseqdrops.</code><code class="descname">extract_UMI</code><span class="sig-paren">(</span><em>protocol</em>, <em>barcode</em>, <em>seq1</em>, <em>missing_base=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/barcode/extract.html#extract_UMI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.extract_UMI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract UMI from reads 1 sequences. If the reads length too short, return blank.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">10</span><span class="n">X</span><span class="p">:</span> <span class="mi">16</span><span class="o">-</span><span class="mi">26</span>
+<span class="mi">10</span><span class="n">X_14_10</span><span class="p">,</span> <span class="mi">10</span><span class="n">X_14_5</span><span class="p">:</span> <span class="mi">14</span><span class="p">:</span><span class="mi">19</span><span class="o">/</span> <span class="mi">14</span><span class="p">:</span><span class="mi">24</span>
+<span class="n">indrop</span><span class="p">:</span> <span class="n">seq1</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">barcode</span><span class="p">)</span> <span class="o">+</span> <span class="mi">22</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">barcode</span><span class="p">)</span> <span class="o">+</span> <span class="mi">22</span> <span class="o">+</span> <span class="mi">6</span><span class="p">]</span>
+<span class="n">dropseq</span><span class="p">:</span> <span class="mi">11</span><span class="o">-</span><span class="mi">19</span><span class="o">/</span><span class="mi">12</span><span class="o">-</span><span class="mi">20</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>barcode</strong> – Provide the barcode sequences;</li>
+<li><strong>seq1</strong> – The sequence of read1;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseqdrop</span> <span class="k">import</span> <span class="n">extract_UMI</span>
+<span class="n">extract_UMI</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;AA....TTT&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.count_barcode">
+<code class="descclassname">baseqdrops.</code><code class="descname">count_barcode</code><span class="sig-paren">(</span><em>path</em>, <em>output</em>, <em>protocol</em>, <em>min_reads=50</em>, <em>topreads=1000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/barcode/count.html#count_barcode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.count_barcode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Count the number of the barcodes (), write a count file.
+Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseqdrops</span> <span class="k">import</span> <span class="n">count_barcode</span>
+<span class="n">count_barcodes</span><span class="p">(</span><span class="s2">&quot;10X.1.fq.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;bc.counts.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="n">min_reads</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">topreads</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>min_reads</strong> (<em>int</em>) – The barcode with reads lower than this will be discard (50).</li>
+<li><strong>topreads</strong> (<em>str</em>) – To process the top N millions of reads (1000).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A csv file of barcode_count, by default (bc.counts.txt)
+cellbarcode/counts</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.valid_barcode">
+<code class="descclassname">baseqdrops.</code><code class="descname">valid_barcode</code><span class="sig-paren">(</span><em>protocol=''</em>, <em>barcode_count=''</em>, <em>max_cell=10000</em>, <em>min_reads=2000</em>, <em>output='bc.stats.txt'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/barcode/stats.html#valid_barcode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.valid_barcode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aggregate the mismatch barcode, get the total_reads;</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ol class="last arabic simple">
+<li>Read the barcode counts files;</li>
+<li>Correct the barcode with 1bp mismatch;</li>
+<li>Stats the mismatch barcode reads and sequences;</li>
+<li>Determine the last base of barcode is missed (mainly for drop-seq);</li>
+<li>Filter the barcode whitelist;</li>
+<li>Filter barcodes by read counts &gt;= min_reads (2000);</li>
+<li>Filter barcodes by the max number of cells;</li>
+<li>Print the number of barcode and reads retained after each steps.</li>
+</ol>
+</div>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseqdrops.barcode.stats</span> <span class="k">import</span> <span class="n">valid_barcode</span>
+<span class="n">valid_barcode</span><span class="p">(</span><span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="s2">&quot;bc.counts.txt&quot;</span><span class="p">,</span>
+    <span class="n">max_cell</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">min_reads</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;bc.stats.txt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This write a bc_stats.csv file (CSV) which contains:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">barcode</span><span class="o">/</span><span class="n">counts</span><span class="o">/</span><span class="n">mismatch_reads</span><span class="o">/</span><span class="n">mismatch_bc</span><span class="o">/</span><span class="n">mutate_last_base</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.check_whitelist">
+<code class="descclassname">baseqdrops.</code><code class="descname">check_whitelist</code><span class="sig-paren">(</span><em>bc_white</em>, <em>protocol</em>, <em>barcode</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/barcode/whitelist.html#check_whitelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.check_whitelist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whitelist.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">check_whitelist</span><span class="p">(</span><span class="n">bc_white</span><span class="p">,</span> <span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="s2">&quot;ATTATATATT&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.split_by_barcode">
+<code class="descclassname">baseqdrops.</code><code class="descname">split_by_barcode</code><span class="sig-paren">(</span><em>name</em>, <em>protocol</em>, <em>bcstats</em>, <em>fq1</em>, <em>fq2</em>, <em>dir</em>, <em>topreads=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/barcode/split.html#split_by_barcode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.split_by_barcode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split raw read2 file into 16 files according to the valid barcode in the bcstats files.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Determine whether the last base mutates;</li>
+<li>Filter by whitelist;</li>
+<li>read barcode stats…</li>
+<li>build barcode correction table…</li>
+<li>build barcode_mutate_last list…</li>
+</ul>
+</div></blockquote>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseq.drops</span> <span class="k">import</span> <span class="n">split_by_barcode</span>
+<span class="n">split</span><span class="p">(</span><span class="s2">&quot;10X_1&quot;</span><span class="p">,</span> <span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="s2">&quot;bc.stats.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;10X_1.1.fq.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;10X_1.2.fq.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;./10X_1&quot;</span><span class="p">,</span> <span class="n">topreads</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Results:</dt>
+<dd>The splitted reads will be write to XXXX/split.[AA…..GG].fa</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.star_align">
+<code class="descclassname">baseqdrops.</code><code class="descname">star_align</code><span class="sig-paren">(</span><em>bc_dir</em>, <em>workdir</em>, <em>sample</em>, <em>genome</em>, <em>parallel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/star.html#star_align"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.star_align" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run Star Alignments in parallel.
+Uasge:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseqdrops.run_star</span> <span class="k">import</span> <span class="n">star_align</span>
+<span class="n">star_align</span><span class="p">(</span><span class="n">bc_dir</span><span class="p">,</span> <span class="n">workdir</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">genome</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Aligned</span><span class="o">.</span><span class="n">AA</span><span class="o">.</span><span class="n">bam</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.tagging_reads">
+<code class="descclassname">baseqdrops.</code><code class="descname">tagging_reads</code><span class="sig-paren">(</span><em>genome</em>, <em>bam</em>, <em>outpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/tagging/prime3.html#tagging_reads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.tagging_reads" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>tagging_reads</strong> will read the bam file which sorted by header or barcode, report the UMIs and reads counts for
+each expressed genes of a barcode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>genome</strong> – The name of genome (hg38);</li>
+<li><strong>bam</strong> – The bam file (should sorted by header);</li>
+<li><strong>outpath</strong> – The path of genes expression files;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<ul class="last simple">
+<li>Check the existence of reference files;</li>
+</ul>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A file for tagged reads;<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BARCODE</span><span class="c1">#{}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">path</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.stats_table">
+<code class="descclassname">baseqdrops.</code><code class="descname">stats_table</code><span class="sig-paren">(</span><em>counts</em>, <em>umis</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/stats/exp_stats.html#stats_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.stats_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stats on the table of UMIs</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseq.drops</span> <span class="k">import</span> <span class="n">stats_table</span>
+<span class="n">stats_table</span><span class="p">(</span><span class="s2">&quot;counts.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;UMIs.txt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="baseqdrops.pipeline">
+<code class="descclassname">baseqdrops.</code><code class="descname">pipeline</code><span class="sig-paren">(</span><em>config</em>, <em>genome</em>, <em>protocol</em>, <em>cells</em>, <em>minreads</em>, <em>name</em>, <em>fq1</em>, <em>fq2</em>, <em>dir</em>, <em>top_million_reads</em>, <em>step</em>, <em>parallel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/pipeline.html#pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the Data Processing Pipeline…</p>
+<ol class="arabic simple">
+<li>Stats and count the barcode from pair-end 1 sequences;</li>
+<li>Read the barcode counts files;</li>
+<li>Correct the barcode with 1bp mismatch;</li>
+<li>Stats the mismatch barcode reads and sequences;</li>
+<li>Determine wheather mutate on the last base (show A/T/C/G with similar ratio at the last base);</li>
+<li>Filter by whitelist;</li>
+<li>Filter by read counts (&gt;=min_reads);</li>
+<li>Print the number of barcode and reads retained after each steps.</li>
+</ol>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseqdrops</span> <span class="k">import</span> <span class="n">pipeline</span>
+<span class="n">pipeline</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">,</span> <span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">minreads</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">fq1</span><span class="p">,</span> <span class="n">fq2</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">top_million_reads</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">parallel</span><span class="p">)</span>
+
+<span class="c1">#specify the length of UMI and barcodes</span>
+<span class="n">pipeline</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">,</span> <span class="s2">&quot;10X&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">minreads</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">fq1</span><span class="p">,</span> <span class="n">fq2</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">top_million_reads</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">parallel</span><span class="p">)</span>
+
+<span class="c1">#Run in command line</span>
+<span class="n">baseqdrops</span>
+</pre></div>
+</div>
+<p>Protocols:</p>
+<ol class="arabic simple">
+<li>For 10X: 16bp Barcode and 10 bp UMI =&gt; 10X (most commonly used)</li>
+<li>For 10X: 14bp Barcode and 5/10 bp UMIs =&gt; 10X_14_10 / 10X_14_5 (For some old version data)</li>
+<li>For DropSeq ==&gt; dropseq</li>
+<li>For inDrop ==&gt; indrop</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>config</strong> – The path of configuration file;</li>
+<li><strong>genome</strong> – Genome version (hg38, mm10, hg38_mm10);</li>
+<li><strong>cells</strong> – Max number of cells;</li>
+<li><strong>minreads</strong> – Minimum number of reads for a cell barcode (10000);</li>
+<li><strong>name</strong> – Samplename;</li>
+<li><strong>fq2</strong> (<em>fq1</em><em>,</em>) – Path to fastq reads;</li>
+<li><strong>dir</strong> – The folder for processing, a folder with samplename will be created;</li>
+<li><strong>top_million_reads</strong> – Number of reads used for processing in Million;</li>
+<li><strong>step</strong> – Steps to run;</li>
+<li><strong>parallel</strong> – How many thread to use;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Steps:</dt>
+<dd>count
+stats
+split
+star
+tagging
+table</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="baseqdrops.reference">
+<em class="property">class </em><code class="descclassname">baseqdrops.</code><code class="descname">reference</code><span class="sig-paren">(</span><em>star_index_dir</em>, <em>cellranger_refs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/tagging/refs.html#reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>About the references of cellranger for counting the 10X data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">baseq.drops</span> <span class="k">import</span> <span class="n">reference</span>
+<span class="n">refs</span> <span class="o">=</span> <span class="n">reference</span><span class="p">(</span><span class="s2">&quot;XXXX&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">目前函数抽离的工作还没有work。
+类还无法使用。</p>
+</div>
+<dl class="method">
+<dt id="baseqdrops.reference.align_to_transcriptome">
+<code class="descname">align_to_transcriptome</code><span class="sig-paren">(</span><em>chrID</em>, <em>start</em>, <em>alength</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/tagging/refs.html#reference.align_to_transcriptome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.reference.align_to_transcriptome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the overlap transcription names.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">refs</span><span class="o">.</span><span class="n">get_overlap_transc</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+<span class="o">&gt;</span> <span class="p">[</span><span class="s1">&#39;ENST....&#39;</span><span class="p">,</span> <span class="s1">&#39;ENST...&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="baseqdrops.reference.overlap_exons">
+<code class="descname">overlap_exons</code><span class="sig-paren">(</span><em>chr</em>, <em>start</em>, <em>end</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/tagging/refs.html#reference.overlap_exons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.reference.overlap_exons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the overlap exons.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="baseqdrops.reference.read_index">
+<code class="descname">read_index</code><span class="sig-paren">(</span><em>cellranger_refs</em>, <em>star_index_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/baseqdrops/tagging/refs.html#reference.read_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#baseqdrops.reference.read_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the cellranger and star index files. It has the following properities:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chrom_names</span><span class="p">:</span> <span class="p">[]</span>
+<span class="n">chrom_starts</span><span class="p">:</span> <span class="p">[</span><span class="n">tx_ids</span><span class="s1">&#39;, &#39;</span><span class="n">tx_starts</span><span class="s1">&#39;, &#39;</span><span class="n">tx_ends</span><span class="s1">&#39;, &#39;</span><span class="n">tx_max_ends</span><span class="s1">&#39;, &#39;</span><span class="n">tx_strands</span><span class="s1">&#39;, &#39;</span><span class="n">tx_num_exons</span><span class="s1">&#39;, &#39;</span><span class="n">tx_break_idxs</span><span class="s1">&#39;]</span>
+<span class="n">tx_info</span><span class="p">:</span> <span class="p">[]</span>
+<span class="n">ex_info</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;ex_starts&#39;</span><span class="p">,</span> <span class="s1">&#39;ex_ends&#39;</span><span class="p">,</span> <span class="s1">&#39;ex_cum_lengths&#39;</span><span class="p">]</span>
+<span class="n">ex_tx</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">,</span> <span class="s1">&#39;tx&#39;</span><span class="p">,</span> <span class="s1">&#39;genename&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DropsRNA</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">baseqDrops: A BEISEQ sofeware.</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/函数介绍.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="baseqDrops: A BEISEQ sofeware."
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">baseqDrops 0.01 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright BEISEQ Information Technology.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

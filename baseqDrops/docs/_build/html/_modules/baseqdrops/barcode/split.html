@@ -1,0 +1,189 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>baseqdrops.barcode.split &#8212; baseqDrops 0.01 documentation</title>
+    <link rel="stylesheet" href="../../../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/customize.css" type="text/css" />
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../../../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for baseqdrops.barcode.split</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">baseq.utils.file_reader</span> <span class="k">import</span> <span class="n">read_file_by_lines</span>
+<span class="kn">from</span> <span class="nn">baseqdrops</span> <span class="k">import</span> <span class="n">extract_barcode</span><span class="p">,</span> <span class="n">extract_UMI</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+
+<span class="n">barcode_prefix</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="s1">&#39;ATCG&#39;</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">))]</span>
+
+<span class="k">def</span> <span class="nf">open_splited_files</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">buffers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;[error] Failed to make output dir...&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">barcode</span> <span class="ow">in</span> <span class="n">barcode_prefix</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="s2">&quot;split.</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">.fq&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">barcode</span><span class="p">))</span>
+        <span class="n">files</span><span class="p">[</span><span class="n">barcode</span><span class="p">]</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">buffers</span><span class="p">[</span><span class="n">barcode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">buffers</span><span class="p">)</span>
+
+<div class="viewcode-block" id="split_by_barcode"><a class="viewcode-back" href="../../../函数介绍.html#baseqdrops.split_by_barcode">[docs]</a><span class="k">def</span> <span class="nf">split_by_barcode</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">bcstats</span><span class="p">,</span> <span class="n">fq1</span><span class="p">,</span> <span class="n">fq2</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">topreads</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split raw read2 file into 16 files according to the valid barcode in the bcstats files.</span>
+
+<span class="sd">        - Determine whether the last base mutates;</span>
+<span class="sd">        - Filter by whitelist;</span>
+<span class="sd">        - read barcode stats...</span>
+<span class="sd">        - build barcode correction table...</span>
+<span class="sd">        - build barcode_mutate_last list...</span>
+
+<span class="sd">    Usage:</span>
+<span class="sd">    ::</span>
+<span class="sd">        from baseq.drops import split_by_barcode</span>
+<span class="sd">        split(&quot;10X_1&quot;, &quot;10X&quot;, &quot;bc.stats.txt&quot;, &quot;10X_1.1.fq.gz&quot;, &quot;10X_1.2.fq.gz&quot;, &quot;./10X_1&quot;, topreads=10)</span>
+
+<span class="sd">    Results:</span>
+<span class="sd">        The splitted reads will be write to XXXX/split.[AA.....GG].fa</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">barcode_corrected</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">barcode_mutate_last</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">bc_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">bcstats</span><span class="p">)</span>
+    <span class="n">bc_stats</span> <span class="o">=</span> <span class="n">bc_stats</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">bc_stats</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">barcode</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span>
+        <span class="n">barcode_corrected</span><span class="p">[</span><span class="n">barcode</span><span class="p">]</span> <span class="o">=</span> <span class="n">barcode</span>
+        <span class="n">mutate_last</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;mutate_last_base&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mutate_last</span><span class="p">:</span>
+            <span class="n">barcode_mutate_last</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">barcode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;mismatch_bc&#39;</span><span class="p">]:</span>
+            <span class="n">barcode_mis</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;mismatch_bc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">barcode_mis</span><span class="p">:</span>
+                <span class="n">barcode_corrected</span><span class="p">[</span><span class="n">bc</span><span class="p">]</span> <span class="o">=</span> <span class="n">barcode</span>
+
+    <span class="c1">#make buffers and file...</span>
+    <span class="n">files</span><span class="p">,</span> <span class="n">buffers</span> <span class="o">=</span> <span class="n">open_splited_files</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">fq1</span> <span class="o">=</span> <span class="n">read_file_by_lines</span><span class="p">(</span><span class="n">fq1</span><span class="p">,</span> <span class="n">topreads</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">fq2</span> <span class="o">=</span> <span class="n">read_file_by_lines</span><span class="p">(</span><span class="n">fq2</span><span class="p">,</span> <span class="n">topreads</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">read1</span> <span class="ow">in</span> <span class="n">fq1</span><span class="p">:</span>
+        <span class="n">read2</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fq2</span><span class="p">)</span>
+        <span class="n">seq1</span> <span class="o">=</span> <span class="n">read1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">counter</span> <span class="o">%</span> <span class="mi">1000000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[info] Processed </span><span class="si">{}</span><span class="s2">M lines in </span><span class="si">{}</span><span class="s2">s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">counter</span><span class="o">/</span><span class="mi">1000000</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">counter</span> <span class="o">%</span> <span class="mi">100000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">buffers</span><span class="p">:</span>
+                <span class="n">files</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buffers</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">buffers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">bc</span> <span class="o">=</span> <span class="n">extract_barcode</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">read1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">barcode_corrected</span><span class="p">:</span>
+            <span class="n">bc_corrected</span> <span class="o">=</span> <span class="n">barcode_corrected</span><span class="p">[</span><span class="n">bc</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">bc_prefix</span> <span class="o">=</span> <span class="n">bc_corrected</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bc_prefix</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">barcode_prefix</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1">#get UMI</span>
+        <span class="k">if</span> <span class="n">barcode</span> <span class="ow">in</span> <span class="n">barcode_mutate_last</span><span class="p">:</span>
+            <span class="n">UMI</span> <span class="o">=</span> <span class="n">extract_UMI</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">barcode</span><span class="p">,</span> <span class="n">seq1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">UMI</span> <span class="o">=</span> <span class="n">extract_UMI</span><span class="p">(</span><span class="n">protocol</span><span class="p">,</span> <span class="n">barcode</span><span class="p">,</span> <span class="n">seq1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1">#build new header</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="n">bc_corrected</span><span class="p">,</span> <span class="n">UMI</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">counter</span><span class="p">)])</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">read2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">quality</span> <span class="o">=</span> <span class="n">read2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">buffers</span><span class="p">[</span><span class="n">bc_prefix</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">header</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">quality</span><span class="p">]))</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">buffers</span><span class="p">:</span>
+        <span class="n">files</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buffers</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">files</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">baseqDrops 0.01 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright BEISEQ Information Technology.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

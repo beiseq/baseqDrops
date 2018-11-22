@@ -1,0 +1,82 @@
+.. currentmodule:: baseqdrops
+
+DropsRNA
+=============
+
+Design
+-------
+The key question for Drops Pipeline design.
+
+- Split the barcode;
+- Tagging reads from genome position;
+
+.. graphviz::
+
+    digraph Drops {
+        rankdir=LR;
+        node [shape=box, style=filled, fillcolor="#C0D0C0"];
+        subgraph clusterClient {
+           label="Barcode Stats";
+           style=filled;
+           bgcolor="#D0C0A0";
+           "Count" -> "Valify" -> "Splited";
+        };
+      subgraph clusterServer {
+         label="Quantify";
+         style=filled;
+         bgcolor="#D0C0A0";
+         "STAR" -> "Tagging" -> "Aggregation";
+        };
+        "Splited" -> "STAR";
+
+     }
+
+Functions
+-----------
+
+**Classes**
+
+.. autosummary::
+  :toctree: .
+
+    reference
+
+**Pipelines22**
+
+.. autosummary::
+  :toctree: .
+
+    pipeline
+
+**Barcode Processing**
+
+.. autosummary::
+   :toctree: .
+
+      extract_barcode
+      extract_UMI
+      count_barcode
+      valid_barcode
+      check_whitelist
+      split_by_barcode
+      split_by_barcode_faster
+
+**Alignments**
+
+.. autosummary::
+   :toctree: .
+
+      star_align
+      tagging_reads
+
+**Stats**
+
+.. autosummary::
+   :toctree: .
+
+      stats_table
+
+APIs
+""""""""""""""""""""""
+.. automodule:: baseqdrops
+   :members:
