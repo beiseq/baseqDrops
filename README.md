@@ -22,10 +22,6 @@ The following software or resources are required:
 + `cellranger_ref_<genome>`: The key process of read alignment and tagging to genes are inspired and borrowed from the open source cellranger pipeline(https://github.com/10XGenomics/cellranger). The references of genome index and transcriptome can be downloaded from https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest.
 In the config file, the directory of cellranger references is named as `cellranger_<genome>`.
 
-NOTION:
-
-Please download an extra file for into the `cellranger_<genome>` folder which should be named as `genes_transcript.txt`. This files is provided in the GeneTransc folder of this project. For hg38 you could find this file in baseqDrops/GeneTransc/hg38/genes_transcript.txt.
-
 While running command, the configures are recorded in the file called `config_drops.ini`:
 
     [Drops]
