@@ -6,7 +6,7 @@ The related paper can be accessed in: https://www.sciencedirect.com/science/arti
 ## Install baseqDrops
 We need python3 and a package called: baseqDrops, which could be installed by:
 
-    pip install baseqDrops
+    pip install baseqDrops==2.0
 
 After install, you will have a runnable command `baseqDrops`
 
